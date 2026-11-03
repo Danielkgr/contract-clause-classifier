@@ -408,3 +408,7 @@ contract-clause-classifier/
 ## Licence
 
 MIT.  See [LICENSE](LICENSE).
+
+## Data attribution
+
+The contracts in this harness come from the [CUAD](https://huggingface.co/datasets/theatticusproject/cuad) dataset (Contract Understanding Atticus Dataset), which is curated and maintained by [The Atticus Project](https://www.atticusprojectai.org/cuad/) and shared under the Creative Commons Attribution 4.0 International licence (CC BY 4.0).  The dataset was annotated with the input of legal experts from The Atticus Project, and its method is described in "CUAD: An Expert-Annotated NLP Dataset for Legal Contract Review" by Dan Hendrycks, Collin Burns, Anya Chen, and Spencer Ball ([arXiv:2103.06268](https://arxiv.org/abs/2103.06268)).  Reuse the data in keeping with the CC BY 4.0 terms, which require that you credit the source and note any changes.  See [NOTICE](NOTICE) for the full attribution.
