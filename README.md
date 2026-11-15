@@ -2,32 +2,30 @@
 
 # Contract Clause Classifier
 
-### A zero-shot LLM against a fine-tuned transformer on contract clauses, compared on accuracy, cost, and latency
+**A zero-shot LLM against a fine-tuned transformer on contract clauses, compared on accuracy, cost, and latency**
 
-![status prototype](https://img.shields.io/badge/status-prototype-9a6700?style=for-the-badge) ![both arms measured](https://img.shields.io/badge/results-both_arms_measured-1a7f37?style=for-the-badge) ![12 clause types](https://img.shields.io/badge/clause_types-12-0969da?style=for-the-badge) [![CI](https://img.shields.io/github/actions/workflow/status/Danielkgr/contract-clause-classifier/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/Danielkgr/contract-clause-classifier/actions/workflows/ci.yml) ![MIT licence](https://img.shields.io/badge/licence-MIT-57606a?style=for-the-badge)
+Prototype · Both arms measured · 12 clause types · MIT licence
+
+[![CI](https://github.com/Danielkgr/contract-clause-classifier/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Danielkgr/contract-clause-classifier/actions/workflows/ci.yml)
 
 </div>
 
-<br>
+---
 
-> Prompting a general model and fine-tuning a small one are both reasonable ways to find a clause in a contract.  The choice turns on cost, latency, and where the contract text is allowed to go, as much as on accuracy.  This harness runs both approaches over the same [CUAD](https://huggingface.co/datasets/theatticusproject/cuad) contracts and reports precision, recall, F1, accuracy, cost per document, and latency for each clause type.
+## About
 
-<br>
+This is an evaluation harness.  A team can find a clause in a contract by prompting a general model or by fine-tuning a small one.  The choice depends on accuracy, cost, latency, and where the contract text is allowed to go.
 
-## What it is
-
-An evaluation harness.  It fine-tunes a RoBERTa classifier, prompts an LLM zero-shot, and asks both the same question of every test contract, whether each clause type appears anywhere in it.  Both are scored against CUAD's labels, and a report compares accuracy, latency, and cost.  The report is framed as a build-or-buy decision for a team choosing between the two.
+The harness fine-tunes a RoBERTa classifier and prompts an LLM zero-shot.  It asks both the same question of every test contract in [CUAD](https://huggingface.co/datasets/theatticusproject/cuad): does each clause type appear anywhere in it?  It scores both against CUAD's labels and reports precision, recall, F1, accuracy, cost per document, and latency for each clause type.  The report frames the result as a build-or-buy decision for a team choosing between the two.
 
 > [!IMPORTANT]
 > It is not a deployed classifier.  It does not serve predictions, store contracts, or ship a production model.
 
-It is a working prototype.  Its tests run every stage on stand-in models and a mocked API, which checks the plumbing and says nothing about accuracy.  Both arms have been run once on the CUAD test split, the zero-shot arm against the live API and the fine-tuned arm on a local GPU.
-
-<br>
+It is a working prototype.  Its tests run every stage on stand-in models and a mocked API.  That checks the plumbing and says nothing about accuracy.  I have run both arms once on the CUAD test split: the zero-shot arm against the live API and the fine-tuned arm on a local GPU.
 
 ## Results
 
-Both arms have been measured once, on the same 56 CUAD test contracts and 12 clause types.  The zero-shot arm ran on 6 October 2026 with `claude-opus-5-5` through the Anthropic API.  The fine-tuned arm trained `roberta-base` on 7 October 2026 on a local AMD Radeon RX 7900 XTX, and scored the test contracts on the same card.
+I measured both arms once, on the same 56 CUAD test contracts and 12 clause types.  I ran the zero-shot arm on 6 October 2026 with `claude-opus-5-5` through the Anthropic API.  I trained `roberta-base` for the fine-tuned arm on 7 October 2026 on a local AMD Radeon RX 7900 XTX, and scored the test contracts on the same card.
 
 | Measure, macro average over 12 clause types | Fine-tuned `roberta-base` | Zero-shot `claude-opus-5-5` |
 |---|:--:|:--:|
@@ -56,20 +54,18 @@ Both arms have been measured once, on the same 56 CUAD test contracts and 12 cla
 | License Grant | **0.962** | 0.926 | Fine-tuned |
 | Warranty Duration | 0.571 | **0.727** | Zero-shot |
 
-The zero-shot model finds more of the clauses that are there.  It missed 14 labelled clauses to the fine-tuned model's 31, and it scores higher F1 on seven of the twelve types.  The fine-tuned model's worst type is Change Of Control, where it found 1 of 9, and it also missed half the non-competes.  It does better on both liability types, where the zero-shot model either missed caps (8 of 24) or over-reported uncapped liability (14 false positives).  The two arms make about the same number of false positives overall, but in different places.  Nobody has yet read the disputed contracts to say whether a model or the label is right, and some of the gap may be how narrowly CUAD defines each type.
+The zero-shot model finds more of the labelled clauses.  It missed 14 labelled clauses to the fine-tuned model's 31, and it scores higher F1 on seven of the twelve types.  The fine-tuned model's worst type is Change Of Control, where it found 1 of 9, and it also missed half the non-competes.  It does better on both liability types, where the zero-shot model either missed caps (8 of 24) or over-reported uncapped liability (14 false positives).  The two arms make about the same number of false positives overall, but in different places.  Nobody has yet read the disputed contracts to say whether a model or the label is right, and some of the gap may be how narrowly CUAD defines each type.
 
 > [!IMPORTANT]
-> Each arm is one run at its default settings, with one seed for the fine-tune and one prompt for the zero-shot model.  Neither was tuned on these contracts, and no interval is reported.  With 56 contracts, one contract moves a rare type's precision or recall by several points, so the per-type differences are indicative, not settled.  The fine-tuned model's latency is the time to tokenise and score each contract's windows on one consumer GPU, with the model already loaded.  The zero-shot cost is computed from each response's usage at list prices in `utils/pricing.py`, and the invoice is the authority.
+> Each arm is one run at its default settings, with one seed for the fine-tune and one prompt for the zero-shot model.  I tuned neither on these contracts, and I report no interval.  With 56 contracts, one contract moves a rare type's precision or recall by several points, so the per-type differences are indicative, not settled.  The fine-tuned model's latency is the time to tokenise and score each contract's windows on one consumer GPU, with the model already loaded.  The harness computes the zero-shot cost from each response's usage at list prices in `utils/pricing.py`.  The invoice is the authority.
 
-On this run the trade-off is the one the harness was built to expose.  The zero-shot model is more accurate here, needs no training, and costs about six cents a contract.  The fine-tuned model is about twelve times faster, has no per-call fee, and keeps every contract in-house, at the price of a training run and weaker recall on the rarer types.
+This run shows the trade-off the harness tests.  The zero-shot model is more accurate here, needs no training, and costs about six cents a contract.  The fine-tuned model is about twelve times faster, has no per-call fee, and keeps every contract in-house.  It needs a training run and has weaker recall on the rarer types.
 
-The artefacts sit in `outputs/`.  `zero_shot-claude-opus-5-5-multi.json` and `fine_tuned-roberta-base.json` hold every contract's labels, predictions, latency, and, for the zero-shot arm, cost and token counts.  `comparison_report.md`, `summary.md`, `comparison_metrics.csv`, and `comparison_plot.png` were written from those two files by `compare_classifiers.py compare`.  [outputs/PROVENANCE.md](outputs/PROVENANCE.md) records how each run was made, and the console output of both is in `eval-logs/`.  The trained model is not committed.
-
-<br>
+The artefacts sit in `outputs/`.  `zero_shot-claude-opus-5-5-multi.json` and `fine_tuned-roberta-base.json` hold every contract's labels, predictions, latency, and, for the zero-shot arm, cost and token counts.  `compare_classifiers.py compare` wrote `comparison_report.md`, `summary.md`, `comparison_metrics.csv`, and `comparison_plot.png` from those two files.  [outputs/PROVENANCE.md](outputs/PROVENANCE.md) records how each run was made, and the console output of both is in `eval-logs/`.  The repository does not include the trained model.
 
 ## Running the comparison
 
-These are the four steps to make a run, in order and cheapest first.
+A run takes four steps.  They are listed in order, cheapest first.
 
 ### Estimate the cost, with no API key
 
@@ -77,7 +73,7 @@ These are the four steps to make a run, in order and cheapest first.
 python compare_classifiers.py estimate
 ```
 
-This was its output for the CUAD test split on 6 October 2026.  Calls and characters are counted exactly from the run's own chunking.  The token and cost figures are estimates.
+This was its output for the CUAD test split on 6 October 2026.  It counts calls and characters exactly from the run's own chunking.  The token and cost figures are estimates.
 
 | Input | Value |
 |---|---:|
@@ -98,9 +94,9 @@ This was its output for the CUAD test split on 6 October 2026.  Calls and charac
 | `claude-haiku-4-5` | $0.79 | up to $9.15 |
 
 > [!IMPORTANT]
-> These are estimates at list prices, not measurements.  Tokens are characters divided by 4, each call is assumed to return 200 output tokens including thinking, and no prompt-cache or Batches API discount is applied.  Single-label figures are upper bounds, because a run stops asking about a clause type once one chunk of the contract has it.  A real run records the actual usage and cost of every call.
+> These are estimates at list prices, not measurements.  The estimate divides characters by 4 to get tokens, assumes each call returns 200 output tokens including thinking, and applies no prompt-cache or Batches API discount.  Single-label figures are upper bounds, because a run stops asking about a clause type once one chunk of the contract has it.  A real run records the actual usage and cost of every call.
 
-Asking about every clause type in one call means the model reads each part of a contract once, rather than once for each clause type.  With the 12 default clause types, that cuts the number of calls, and most of the cost, by roughly twelve times.  For a firm, it is the difference between paying for one read of each contract and paying for twelve.
+Asking about every clause type in one call means the model reads each part of a contract once, instead of once for each clause type.  With the 12 default clause types, that cuts the number of calls, and most of the cost, by roughly twelve times.  A firm pays for one read of each contract instead of twelve.
 
 ### Run the zero-shot arm on Claude
 
@@ -126,7 +122,7 @@ Fine-tuning RoBERTa needs a GPU in practice, for example a Google Colab notebook
 
 It trains on the 401 training contracts, checks progress against the 53 validation contracts, scores the 56 test contracts, and writes `outputs/fine_tuned-roberta-base.json`.  In Colab, `from google.colab import files; files.download("outputs/fine_tuned-roberta-base.json")` downloads that file.  Put it in `outputs/` next to the zero-shot results.
 
-The published run used a local AMD Radeon RX 7900 XTX instead, with PyTorch 2.14.1 built for ROCm 7.14, and trained in 35 minutes.  Any GPU that PyTorch supports will do.
+For the published run I used a local AMD Radeon RX 7900 XTX instead, with PyTorch 2.14.1 built for ROCm 7.14.  Training took 35 minutes.  Any GPU that PyTorch supports will do.
 
 ### Write the report
 
@@ -134,9 +130,7 @@ The published run used a local AMD Radeon RX 7900 XTX instead, with PyTorch 2.14
 python compare_classifiers.py compare
 ```
 
-It scores every saved arm on the contracts they share and writes `comparison_report.md`, `summary.md`, `comparison_metrics.csv`, and `comparison_plot.png` to `outputs/`.  Those are the files the Results section cites.
-
-<br>
+It scores every saved arm on the contracts they share and writes `comparison_report.md`, `summary.md`, `comparison_metrics.csv`, and `comparison_plot.png` to `outputs/`.  The Results section cites those files.
 
 ## How it works
 
@@ -189,12 +183,12 @@ The client sends the contract in chunks of 24,000 characters that overlap by 1,0
 
 Both modes share one prompt template, so they differ only in how many clause types each call covers.  In multi-label mode a contract needs roughly one call per chunk, where single-label mode needs up to one per chunk for every clause type.
 
-A failed call is never read as absent.  If no chunk's answer lists a clause type and a call that could have found it failed, that contract and clause type are left out of the metrics and counted.  A call fails when the API returns an error, the model refuses, the answer is cut off at `LLM_MAX_TOKENS`, or the answer is not the JSON asked for.  A rejected API key or an unknown model stops the run at the first call instead.
+The harness never reads a failed call as absent.  If no chunk's answer lists a clause type and a call that could have found it failed, the harness leaves that contract and clause type out of the metrics and counts the omission.  A call fails when the API returns an error, the model refuses, the answer is cut off at `LLM_MAX_TOKENS`, or the answer is not the JSON asked for.  A rejected API key or an unknown model stops the run at the first call instead.
 
 > [!NOTE]
-> The harness does not turn on Anthropic's server-side fallbacks.  A fallback would let a different model answer a refused request without that showing in the results, so a refusal is recorded as its own outcome instead.
+> The harness does not turn on Anthropic's server-side fallbacks.  A fallback would let a different model answer a refused request without that showing in the results, so the harness records a refusal as its own outcome.
 
-The definitions come first in each request and are marked for prompt caching.  The API caches them only once they reach the model's minimum cacheable length, which is 512 tokens for Opus 5.5 and Sonnet 5.5 and 4,096 for Haiku 4.5.  With the 12 default clause types the system prompt is about 1,400 characters, roughly 350 tokens, which suggested there would be no cache reads at the defaults.  The live run says otherwise.  Its 130 calls recorded 99,792 cache read tokens and 3,168 cache write tokens, so the prefix the API counts is longer than the system prompt alone.  Each call records the cache reads that the API reports in its usage.
+The definitions come first in each request and are marked for prompt caching.  The API caches them only once they reach the model's minimum cacheable length, which is 512 tokens for Opus 5.5 and Sonnet 5.5 and 4,096 for Haiku 4.5.  With the 12 default clause types the system prompt is about 1,400 characters, roughly 350 tokens, so I expected no cache reads at the defaults.  The live run showed otherwise.  Its 130 calls recorded 99,792 cache read tokens and 3,168 cache write tokens, so the prefix the API counts is longer than the system prompt alone.  Each call records the cache reads that the API reports in its usage.
 
 | Safeguard | What it does |
 |---|---|
@@ -204,11 +198,11 @@ The definitions come first in each request and are marked for prompt caching.  T
 
 ### Latency and cost
 
-Both arms are timed per contract.  For the LLM, that is the sum of its calls, and a call answered from the cache keeps the latency and cost measured when it was made.  Cost comes from the token usage each response reports, at the per-million prices in `utils/pricing.py`.  Cached input is priced at its own rate, and a model with no listed price is reported as not priced rather than charged at a guessed rate.  The OpenAI prices there were recorded on 2026-09-23 and need checking before use.  For the fine-tuned model, it is the time to tokenise and score every window.  The fine-tuned arm has no per-call fee, so its cost is reported as not priced unless `FT_COST_PER_HOUR` is set, in which case the measured time is multiplied by that rate.
+Both arms are timed per contract.  For the LLM, that is the sum of its calls, and a call answered from the cache keeps the latency and cost measured when it was made.  Cost comes from the token usage each response reports, at the per-million prices in `utils/pricing.py`.  Cached input is priced at its own rate, and the report marks a model with no listed price as not priced instead of guessing a rate.  I recorded the OpenAI prices there on 2026-09-23, and they need checking before use.  For the fine-tuned model, it is the time to tokenise and score every window.  The fine-tuned arm has no per-call fee, so its cost is reported as not priced unless `FT_COST_PER_HOUR` is set, in which case the measured time is multiplied by that rate.
 
 ### Choosing between the two
 
-These are the trade-offs the report is built to test.  The run in [Results](#results) bears out the setup, running cost, latency, and data handling rows.  It also found something the table does not say, that on these contracts the zero-shot model was the more accurate, so the fine-tuned model's case rests on speed, cost at volume, and keeping the text in-house.  The volume and best fit rows are judgements the run cannot test.
+The report tests these trade-offs.  The run in [Results](#results) confirms the setup, running cost, latency, and data handling rows.  It also found something the table does not show: on these contracts the zero-shot model was more accurate.  The case for the fine-tuned model therefore rests on speed, cost at volume, and keeping the text in-house.  The volume and best fit rows are judgements the run cannot test.
 
 | Consideration | Zero-shot LLM | Fine-tuned model |
 |---|---|---|
@@ -218,8 +212,6 @@ These are the trade-offs the report is built to test.  The run in [Results](#res
 | **Latency** | An API round trip for every chunk | Local inference over every window of the contract |
 | **Data handling** | Contract text goes to the provider | Contract text stays in-house |
 | **Best fit** | A prototype or proof of concept | A long-term deployed service |
-
-<br>
 
 ## Quick start
 
@@ -241,8 +233,6 @@ pytest
 ```
 
 The tests cover CUAD parsing, splitting, and answer spans, chunking and window labelling, both evaluation arms and both prompt modes with stand-in models, the Claude and OpenAI clients with the API mocked at the HTTP layer, prices and cost, the handling of failed calls and refusals, retries, the response cache, concurrency, the cost estimate, loading settings from `.env`, and masking the API key.  They make no network calls, need no API key, and need only `requirements-dev.txt`, which has no torch.  One of them checks the real CUAD file when `data/CUAD_v1.json` is present.  One more test trains, saves, reloads, and runs the real classifier with a tiny model.  It needs torch and transformers, downloads the model, and runs only with `RUN_SMOKE=1 pytest`.  CI runs the lint, format, and test commands above on Python 3.12 and 3.13 for every push and pull request.
-
-<br>
 
 ## Usage
 
@@ -277,8 +267,6 @@ python compare_classifiers.py estimate --text-file contract.txt
 ```
 
 The estimate counts calls and characters exactly from the run's own chunking.  Tokens are characters divided by 4 and output is assumed at 200 tokens per call, which `--output-tokens` changes, so its token and cost figures are estimates.
-
-<br>
 
 ## Reference
 
@@ -317,7 +305,7 @@ The estimate counts calls and characters exactly from the run's own chunking.  T
 
 ### Default clause types
 
-The defaults are 12 of CUAD's 41 categories, a mix of common and rarer clauses.  Any other category can be chosen with `--clause-types`, spelled as it is in `CUAD_CATEGORIES` in `config.py` though case does not matter.  A name that is not a CUAD category stops the command with an error that lists the valid ones, rather than labelling every contract as absent.
+The defaults are 12 of CUAD's 41 categories, a mix of common and rarer clauses.  Any other category can be chosen with `--clause-types`, spelled as it is in `CUAD_CATEGORIES` in `config.py` though case does not matter.  A name that is not a CUAD category stops the command with an error that lists the valid ones, instead of labelling every contract as absent.
 
 | Clause type | What it covers |
 |---|---|
@@ -368,8 +356,6 @@ Every artefact is written to `outputs/`.
 | **Utilities** | `python-dotenv` |
 | **Tests and lint** | `pytest`, `ruff` |
 
-<br>
-
 ## Layout
 
 ```text
@@ -402,8 +388,6 @@ contract-clause-classifier/
   outputs/                   Results, created on the first run
   .cache/llm/                Cached LLM responses, created by the first zero-shot run
 ```
-
-<br>
 
 ## Licence
 
