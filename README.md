@@ -42,7 +42,7 @@ I measured both arms once, on the same 56 CUAD test contracts and 12 clause type
 | Clause type | Fine-tuned F1 | Zero-shot F1 | Better |
 |---|:--:|:--:|---|
 | Governing Law | 1.000 | 1.000 | Tie |
-| Anti-Assignment | 0.919 | 0.959 | Zero-shot |
+| Anti-Assignment | 0.919 | **0.959** | Zero-shot |
 | Cap On Liability | **0.880** | 0.762 | Fine-tuned |
 | Uncapped Liability | **0.636** | 0.563 | Fine-tuned |
 | Audit Rights | 0.789 | **0.895** | Zero-shot |
@@ -385,7 +385,10 @@ contract-clause-classifier/
   tests/                     Loader, chunking, evaluation, prompt, cost, and client tests, plus a smoke test
   data/                      Optional local copy of CUAD_v1.json
   models/                    Saved fine-tuned checkpoints
-  outputs/                   Results, created on the first run
+  outputs/                   Results of the published run, with PROVENANCE.md.  New runs write here.
+  eval-logs/                 Console output of the estimate and of both published runs
+  LICENSE, NOTICE            The MIT licence and the CUAD attribution
+  SECURITY.md                How to report a security problem
   .cache/llm/                Cached LLM responses, created by the first zero-shot run
 ```
 
